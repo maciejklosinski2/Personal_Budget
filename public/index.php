@@ -27,9 +27,6 @@ $router->add('login', ['controller' => 'Login', 'action' => 'new']);
 
 $router->add('{controller}/{action}');
 
-$router->add('income', ['controller' => 'addIncome', 'action' => 'new']);
-$router->add('addIncome', ['controller' => 'addIncome', 'action' => 'create']);
-
 $router->add('{controller}/{id:\d+}/{action}');
 $router->add('signup/activate/{token:[\da-f]+}', ['controller' => 'Signup', 'action' => 'activate']);
 $router->add('logout', ['controller' => 'Login', 'action' => 'destroy']);
