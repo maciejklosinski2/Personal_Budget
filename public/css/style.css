@@ -370,15 +370,6 @@ border-color: #1073FF !important;
 	border-color: white !important ;
 }
 
-/*
-.sloganContainer
-{
-margin-top: 150px;		
-text-align:center;	
-font-weight: bold;
-font-size:32px;
-}
-*/
 .error
 {
 	font-family: 'Oswald', sans-serif;
@@ -467,7 +458,7 @@ font-size:32px;
 
 .extraText
 {	
-	color:black;
+	color: #1073FF !important;
 	font-weight:bold;
 	font-family: 'Oswald', sans-serif;
 	margin-top:10px;
