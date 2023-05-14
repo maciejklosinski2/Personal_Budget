@@ -103,5 +103,118 @@ class Expense extends \Core\Model
             return $stmt->execute();
         }
         return false;
-    }   
+    }
+
+    public static function checkExpenseCategoryExists($user_id, $oldExpenseCategoryName) 
+    {
+        
+        $db = static::getDB();
+
+        $stmt = $db->prepare( 'SELECT * FROM expenses_category_assigned_to_users WHERE user_id = :user_id AND name =:name' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $oldExpenseCategoryName, PDO::PARAM_STR );
+        $stmt->setFetchMode( PDO::FETCH_ASSOC );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+     public static function addNewExpenseCategory( $user_id, $newExpenseCategoryName)
+    {
+        $db = static::getDB();
+        
+        $stmt = $db->prepare('INSERT INTO expenses_category_assigned_to_users VALUES (NULL, :user_id, :name)');
+        
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newExpenseCategoryName, PDO::PARAM_STR );        
+        
+        return $stmt->execute();
+
+    }
+
+    public static function getEditedExpenseCategoryId( $user_id, $expenseCategoryName)
+    {
+
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'SELECT id FROM expenses_category_assigned_to_users WHERE name =:name AND user_id =:user_id ' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $expenseCategoryName, PDO::PARAM_STR );
+        
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
+    public static function editExpenseCategory( $user_id, $oldExpenseCategoryName, $newExpenseCategoryName )
+    {
+        $categoryId = static::getEditedExpenseCategoryId($user_id, $oldExpenseCategoryName);
+        
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'UPDATE expenses_category_assigned_to_users SET name = :name WHERE id = :id ' );
+
+        $stmt->bindValue( ':id', $categoryId, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newExpenseCategoryName, PDO::PARAM_STR );        
+        
+        return $stmt->execute();    
+    }
+
+     public static function checkPaymentMethodExists($user_id, $oldPaymentMethod) 
+    {
+        
+        $db = static::getDB();
+
+        $stmt = $db->prepare( 'SELECT * FROM payment_methods_assigned_to_users WHERE user_id = :user_id AND name =:name' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $oldPaymentMethod, PDO::PARAM_STR );
+        $stmt->setFetchMode( PDO::FETCH_ASSOC );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+     public static function addNewPaymentMethod( $user_id, $newPaymentMethod)
+    {
+        $db = static::getDB();
+        
+        $stmt = $db->prepare('INSERT INTO payment_methods_assigned_to_users VALUES (NULL, :user_id, :name)');
+        
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newPaymentMethod, PDO::PARAM_STR );        
+        
+        return $stmt->execute();
+    }
+
+    public static function getEditedPaymentMethodId( $user_id, $paymentMethod)
+    {
+
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'SELECT id FROM payment_methods_assigned_to_users WHERE name =:name AND user_id =:user_id ' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $paymentMethod, PDO::PARAM_STR );
+        
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
+    public static function editPaymentMethod( $user_id, $oldPaymentMethod, $newPaymentMethod )
+    {
+        $categoryId = static::getEditedPaymentMethodId($user_id, $oldPaymentMethod);
+        
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'UPDATE payment_methods_assigned_to_users SET name = :name WHERE id = :id ' );
+
+        $stmt->bindValue( ':id', $categoryId, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newPaymentMethod, PDO::PARAM_STR );        
+        
+        return $stmt->execute();    
+    }  
 }

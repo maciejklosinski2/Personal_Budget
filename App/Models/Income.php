@@ -73,4 +73,76 @@ class Income extends \Core\Model
         return $income_categories;
         
     }
+
+    public static function checkIncomeCategoryExists($user_id, $oldIncomeCategoryName) 
+    {
+        
+        $db = static::getDB();
+
+        $stmt = $db->prepare( 'SELECT * FROM incomes_category_assigned_to_users WHERE user_id = :user_id AND name =:name' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $oldIncomeCategoryName, PDO::PARAM_STR );
+        $stmt->setFetchMode( PDO::FETCH_ASSOC );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function addNewIncomeCategory( $user_id, $newIncomeCategoryName)
+    {
+        $db = static::getDB();
+        
+        $stmt = $db->prepare('INSERT INTO incomes_category_assigned_to_users VALUES (NULL, :user_id, :name)');
+        
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newIncomeCategoryName, PDO::PARAM_STR );        
+        
+        return $stmt->execute();
+
+    }
+
+    public static function getEditedIncomeCategoryId( $user_id, $incomeCategoryName)
+    {
+
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'SELECT id FROM incomes_category_assigned_to_users WHERE name =:name AND user_id =:user_id ' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $incomeCategoryName, PDO::PARAM_STR );
+        
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
+    public static function editIncomeCategory( $user_id, $oldIncomeCategoryName, $newIncomeCategoryName )
+    {
+        $categoryId = static::getEditedIncomeCategoryId($user_id, $oldIncomeCategoryName);
+        
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'UPDATE incomes_category_assigned_to_users SET name = :name WHERE id = :id ' );
+
+        $stmt->bindValue( ':id', $categoryId, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newIncomeCategoryName, PDO::PARAM_STR );        
+        
+        return $stmt->execute();    
+    }
+
+    public static function deleteIncomeCategory( $user_id, $oldIncomeCategoryName, $newIncomeCategoryName)
+    {
+        $categoryId = static::getEditedIncomeCategoryId($user_id, $oldIncomeCategoryName);
+        
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'UPDATE incomes_category_assigned_to_users SET name = :name WHERE id = :id ' );
+
+        $stmt->bindValue( ':id', $categoryId, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $newIncomeCategoryName, PDO::PARAM_STR );        
+        
+        return $stmt->execute();    
+    }
+
 }
