@@ -103,36 +103,36 @@ class balance extends \Core\Model
 		return $date;
     }
 
-    public static function getUserSelectedDate()
-    {
-		$date = ['first_date' => $_POST['first_date'],
-            'second_date' => $_POST['second_date']];
-
-		return $date;
+    public static function getUserSelectedDate($arg1='',$arg2='')
+    {          
+        $date = 
+        [
+        'first_date' => isset($_POST['first_date']) ? $_POST['first_date']: '',
+        'second_date' => isset($_POST['second_date']) ? $_POST['second_date']: ''
+        ];
+        return $date;
     }
 
     public static function selectPeriod()
-    {
-    	$date = ['first_date' => $_POST['first_date'],
-            'second_date' => $_POST['second_date']];
-
-		return $date;  
+    {       
+        $date = 
+        [
+        'first_date' => isset($_POST['first_date']) ? $_POST['first_date']: '',
+        'second_date' => isset($_POST['second_date']) ? $_POST['second_date']: ''
+        ];
+        return $date;  
     }
 
     public static function getIncomes( $date, $id) 
     {
         $db = static::getDB();
-
-        $stmt = $db->prepare( 'SELECT inc.amount, inc.date_of_income, inc.income_category_assigned_to_user_id, inc.income_comment, cat.name FROM incomes as inc, incomes_category_assigned_to_users AS cat WHERE inc.date_of_income BETWEEN :first_date AND :second_date AND inc.user_id = :user_id AND inc.income_category_assigned_to_user_id = cat.id ORDER BY inc.date_of_income ASC' );
+        $stmt = $db->prepare( 'SELECT inc.id, inc.amount, inc.date_of_income, inc.income_category_assigned_to_user_id, inc.income_comment, cat.name FROM incomes as inc, incomes_category_assigned_to_users AS cat WHERE inc.date_of_income BETWEEN :first_date AND :second_date AND inc.user_id = :user_id AND inc.income_category_assigned_to_user_id = cat.id ORDER BY inc.date_of_income ASC' );
 
         $stmt->bindValue( ':first_date', $date['first_date'], PDO::PARAM_STR ); 
         $stmt->bindValue( ':second_date', $date['second_date'], PDO::PARAM_STR );
         $stmt->bindValue( ':user_id', $id, PDO::PARAM_INT );
-
         $stmt->setFetchMode( PDO::FETCH_ASSOC );
-
         $stmt->execute();
-
         return $stmt->fetchAll();
     }
 
@@ -176,16 +176,13 @@ class balance extends \Core\Model
     {
         $db = static::getDB();
 
-        $stmt = $db->prepare( 'SELECT exp.amount, exp.date_of_expense, exp.expense_category_assigned_to_user_id, exp.expense_comment, cat.name FROM expenses AS exp, expenses_category_assigned_to_users AS cat WHERE exp.date_of_expense BETWEEN :first_date AND :second_date AND exp.user_id = :user_id AND exp.expense_category_assigned_to_user_id = cat.id ORDER BY exp.date_of_expense ASC' );
+        $stmt = $db->prepare( 'SELECT exp.id, exp.amount, exp.date_of_expense, exp.expense_category_assigned_to_user_id, exp.payment_method_assigned_to_user_id, exp.expense_comment, cat.name, pay.name as payment_name FROM expenses AS exp, expenses_category_assigned_to_users AS cat, payment_methods_assigned_to_users AS pay WHERE exp.date_of_expense BETWEEN :first_date AND :second_date AND exp.user_id = :user_id AND pay.user_id = :user_id AND  exp.expense_category_assigned_to_user_id = cat.id AND exp.payment_method_assigned_to_user_id = pay.id ORDER BY exp.date_of_expense ASC' );
 
         $stmt->bindValue( ':first_date', $date['first_date'], PDO::PARAM_STR );
         $stmt->bindValue( ':second_date', $date['second_date'], PDO::PARAM_STR );
         $stmt->bindValue( ':user_id', $id, PDO::PARAM_INT );
-
         $stmt->setFetchMode( PDO::FETCH_ASSOC );
-
         $stmt->execute();
-
         return $stmt->fetchAll();
     }
 
