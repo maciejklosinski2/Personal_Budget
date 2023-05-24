@@ -14,7 +14,7 @@ class User extends \Core\Model
     public $passwordErrors = [];
     public $captchaErrors = [];
 
-	public function __construct($data = [])
+    public function __construct($data = [])
     {
         foreach ($data as $key => $value) 
         {
@@ -45,7 +45,7 @@ class User extends \Core\Model
             $stmt->bindValue(':activation_hash', $hashed_token, PDO::PARAM_STR);
             return $stmt->execute();
         }
-        return false;	
+        return false;   
     }
 
     public function saveUserData() 
@@ -140,11 +140,7 @@ class User extends \Core\Model
             {
                 $this->passwordErrors[] = 'Hasło musi posiadać co najmniej jedną cyfrę';
             }
-
-            if ( $this->password1 != $this->password2) 
-            {
-                $this->passwordErrors[] = 'Podane hasła nie są identyczne!';
-            }
+            
         }
 
          $secret_key = "6Lf-uuAdAAAAAP6fjZpvSjmY0AXI3B5H__4vWqKV";

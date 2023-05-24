@@ -6,13 +6,15 @@ use PDO;
 use \Core\View;
 use \App\Flash;
 
+
+
 class Income extends \Core\Model
 {
-	public $amountErrors = [];
-	public $dateErrors = [];
+    public $amountErrors = [];
+    public $dateErrors = [];
 
-	public function __construct( $data = [] ) 
-	{
+    public function __construct( $data = [] ) 
+    {
         foreach ( $data as $key => $value ) 
         {
             $this->$key = $value;
@@ -48,6 +50,9 @@ class Income extends \Core\Model
 
         return $stmt->fetchAll();
     }
+    
+
+    
 
     public function saveUserIncome($user_id) 
     {
@@ -55,7 +60,7 @@ class Income extends \Core\Model
         $this->amountErrors = Flash::validateAmount( $this->amount );
         $this->dateErrors = Flash::validateDate( $this->date );
 
-        if((empty($this->amountErrors)) && (empty($this->dateErrors))) 
+        if ( ( empty( $this->amountErrors ) ) && ( empty( $this->dateErrors ) ) ) 
         {
             $sql = 'INSERT INTO incomes VALUES(NULL, :user_id, :income_category_assigned_to_user_id, :amount, :date_of_income, :income_comment)';
 
@@ -74,7 +79,25 @@ class Income extends \Core\Model
         return false;
     }
 
-    public static function getUserIncomeCategories($id) 
+    public static function getIncomes( $date, $user_id ) 
+    {
+        $db = static::getDB();
+
+        $stmt = $db->prepare( 'SELECT amount, date_of_income, income_category_assigned_to_user_id, income_comment, inc.name FROM incomes, incomes_category_assigned_to_users AS inc WHERE incomes.date_of_income BETWEEN :first_date AND :second_date AND incomes.user_id = :user_id AND incomes.income_category_assigned_to_user_id = inc.id ORDER BY incomes.date_of_income ASC' );
+
+        $stmt->bindValue( ':first_date', $date['first_date'], PDO::PARAM_STR );
+        $stmt->bindValue( ':second_date', $date['second_date'], PDO::PARAM_STR );
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+
+        $stmt->setFetchMode( PDO::FETCH_ASSOC );
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+
+    public static function getUserIncomeCategories( $id )
     {
         $db = static::getDB();
 
@@ -82,11 +105,12 @@ class Income extends \Core\Model
 
         $query_income_categories->bindValue(':id',$_SESSION['user_id'],PDO::PARAM_INT);
         $query_income_categories->execute();
-        $income_categories=$query_income_categories->fetchAll();        
+        $income_categories=$query_income_categories->fetchAll();
 
         return $income_categories;
-        
     }
+
+    
 
     public static function checkIncomeCategoryExists($user_id, $oldIncomeCategoryName) 
     {
@@ -102,6 +126,39 @@ class Income extends \Core\Model
 
         return $stmt->fetchAll();
     }
+
+    public static function checkIncomeCategoryRecordsExists($user_id, $deletedIncomesCategoryName) 
+    {
+        
+        $deletedIncomesCategoryId = static::getEditedIncomeCategoryId($user_id, $deletedIncomesCategoryName);
+        $db = static::getDB();
+
+        $stmt = $db->prepare( 'SELECT * FROM incomes WHERE user_id = :user_id AND income_category_assigned_to_user_id =:category_id' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':category_id', $deletedIncomesCategoryId, PDO::PARAM_STR );
+        $stmt->setFetchMode( PDO::FETCH_ASSOC );
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function getEditedIncomeCategoryId( $user_id, $incomeCategoryName)
+    {
+
+        $db = static::getDB();
+        
+        $stmt = $db->prepare( 'SELECT id FROM incomes_category_assigned_to_users WHERE name =:name AND user_id =:user_id ' );
+
+        $stmt->bindValue( ':user_id', $user_id, PDO::PARAM_INT );
+        $stmt->bindValue( ':name', $incomeCategoryName, PDO::PARAM_STR );
+        
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
+
 
     public static function addNewIncomeCategory( $user_id, $newIncomeCategoryName)
     {
@@ -145,6 +202,7 @@ class Income extends \Core\Model
         return $stmt->execute();    
     }
 
+    
     public static function deleteIncomesCategory($user_id, $deletedIncomesCategoryName) 
     {
                     
@@ -259,5 +317,4 @@ class Income extends \Core\Model
 
         return $stmt->execute();
     }
-
 }
