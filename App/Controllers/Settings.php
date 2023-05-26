@@ -37,6 +37,7 @@ class Settings extends Authenticated
                     'userPaymentMethods' => $userPaymentMethods,
                     'pass' => $arg1,
                     'error' => $arg2,
+                    
 
                 ] );
             }
@@ -190,48 +191,89 @@ class Settings extends Authenticated
         $newExpenseCategory = $_POST['newExpenseCategory'] ;
         $active ='';
 
+
+
         if ( Expense::checkExpenseCategoryExists($this->user->id, $newExpenseCategory ) ) 
         {
             $pass = '';
             $error = "Podana kategoria już istnieje!";
             $active ='4';
-            $this -> newAction( $pass, $error, $active);           
-             
+            $this -> newAction( $pass, $error, $active);        
         }
 
         else
         {
-            Expense::addNewExpenseCategory($this->user->id, $newExpenseCategory);
-            $pass = "Dodano nową kategorię!";
-            $error = '';
-            $active ='4';
-            $this -> newAction( $pass, $error, $active); 
+            if (isset ($_POST['expenseLimit'])) 
+            {
+                $newExpenseLimitAmount = $_POST['newExpenseLimits'];
+                Expense::addNewExpenseCategory($this->user->id, $newExpenseCategory, $newExpenseLimitAmount );
+                $pass = "Dodano nową kategorię!";
+                $error = '';
+                $active ='4';
+                $this -> newAction( $pass, $error, $active); 
+            }
+            else
+            {
+                Expense::addNewExpenseCategory($this->user->id, $newExpenseCategory, 0 );
+                $pass = "Dodano nową kategorię!";
+                $error = '';
+                $active ='4';
+                $this -> newAction( $pass, $error, $active);
+            }
         }     
     }
 
     public function editExpenseCategoryAction()
     {
-        $editedExpenseCategory = $_POST['editedExpenseCategory'];
+        $expenseLimitAmount = $_POST['limitAmount'];
         $oldExpenseCategoryName = $_POST['oldExpenseCategoryName'];
+        $editedExpenseCategory = $_POST['editedExpenseCategory'];
         $active ='';
+        
+            
+            if ($expenseLimitAmount != Expense::getUserCategoryLimit($this->user->id, $oldExpenseCategoryName)) 
+            {
+                if ( Expense::checkExpenseCategoryExists($this->user->id,$editedExpenseCategory))
+                {
 
-        if ( Expense::checkExpenseCategoryExists($this->user->id,$editedExpenseCategory))
-        {
-            $pass = '';
-            $error = "Podana kategoria już istnieje!";            
-            $active ='5';
-            $this -> newAction( $pass, $error, $active);
-        }
-
-        else
-        {
-            Expense::editExpenseCategory($this->user->id, $oldExpenseCategoryName, $editedExpenseCategory);
-            $pass = "Pomyślnie zmieniono nazwę kategorii";
-            $error = '';            
-            $active ='5';
-            $this -> newAction( $pass, $error, $active);
-        }     
-
+                    Expense::editExpenseCategoryLimit($this->user->id, $oldExpenseCategoryName, $expenseLimitAmount);                
+                    $pass = "Pomyślnie nadano limit dla wydatku";
+                    $error = "Podana nazwa kategorii już istnieje!";            
+                    $active ='5';
+                    $this -> newAction( $pass, $error, $active);
+                }
+                else
+                {
+                    Expense::editExpenseCategory($this->user->id, $oldExpenseCategoryName, $editedExpenseCategory);
+                    Expense::editExpenseCategoryLimit($this->user->id, $editedExpenseCategory, $expenseLimitAmount);
+                    $pass = "Pomyślnie zmieniono nazwę kategorii oraz nadano limit";
+                    $error = '';            
+                    $active ='5';
+                    $this -> newAction( $pass, $error, $active);
+                }
+            }
+            else
+            {
+                if ( Expense::checkExpenseCategoryExists($this->user->id,$editedExpenseCategory))
+                {
+                    Expense::editExpenseCategoryLimit($this->user->id, $oldExpenseCategoryName, $expenseLimitAmount);                
+                    $pass = '';
+                    $error = "Podana nazwa kategorii już istnieje! Limit wydatku pozostał niezmieniony!";            
+                    $active ='5';
+                    $this -> newAction( $pass, $error, $active);
+                }
+                else
+                {
+                    Expense::editExpenseCategory($this->user->id, $oldExpenseCategoryName, $editedExpenseCategory);
+                    Expense::editExpenseCategoryLimit($this->user->id, $editedExpenseCategory, $expenseLimitAmount );
+                    $pass = "Pomyślnie zmieniono nazwę kategorii";
+                    $error = 'Limit wydatku pozostał niezmieniony';            
+                    $active ='5';
+                    $this -> newAction( $pass, $error, $active);
+                }
+            }
+        
+        
     }
 
     public function deleteExpensesCategoryAction()
@@ -256,21 +298,21 @@ class Settings extends Authenticated
         
         if (Expense::checkExpenseCategoryRecordsExists($this->user->id, $deletedExpenseCategory))
         {
-            Expense::moveExpensesToDifferentCategory($this->user->id, $deletedExpenseCategory, $targetedExpenseCategory);
-            Expense::deleteExpensesFromUserExpenseCategory( $this->user->id, $deletedExpenseCategory );
-            Expense::deleteExpensesCategory( $this->user->id, $deletedExpenseCategory );
-            $pass = "Kategoria została usunięta, a rekordy przeniesione do nowej kategorii";
-            $error = ''; 
-            $active ='6';
-            $this -> newAction( $pass, $error, $active);
+	        Expense::moveExpensesToDifferentCategory($this->user->id, $deletedExpenseCategory, $targetedExpenseCategory);
+	        Expense::deleteExpensesFromUserExpenseCategory( $this->user->id, $deletedExpenseCategory );
+	        Expense::deleteExpensesCategory( $this->user->id, $deletedExpenseCategory );
+	        $pass = "Kategoria została usunięta, a rekordy przeniesione do nowej kategorii";
+	        $error = ''; 
+	        $active ='6';
+	        $this -> newAction( $pass, $error, $active);
         }
         else
         {
-            Expense::deleteExpensesCategory( $this->user->id, $deletedExpenseCategory );
-            $pass = "Kategoria została usunięta";
-            $error = "Usunięta kategoria nie zawierała rekordów";  
-            $active ='6';
-            $this -> newAction( $pass, $error, $active);
+        	Expense::deleteExpensesCategory( $this->user->id, $deletedExpenseCategory );
+        	$pass = "Kategoria została usunięta";
+	        $error = "Usunięta kategoria nie zawierała rekordów";  
+	        $active ='6';
+	        $this -> newAction( $pass, $error, $active);
         }
          
     }
@@ -342,21 +384,21 @@ class Settings extends Authenticated
 
         if (Expense::checkPaymentMethodRecordsExists($this->user->id, $deletedPaymentMethod))
         {
-            Expense::movePaymentsToDifferentCategory($this->user->id, $deletedPaymentMethod, $targetedPaymentMethod);
-            Expense::deletePaymentsFromUserPaymentCategory( $this->user->id, $deletedPaymentMethod );
-            Expense::deletePaymentMethod( $this->user->id, $deletedPaymentMethod );
-            $pass = "Metoda płatności została usunięta";
-            $error = ''; 
-            $active ='9';
-            $this -> newAction( $pass, $error, $active);
+	        Expense::movePaymentsToDifferentCategory($this->user->id, $deletedPaymentMethod, $targetedPaymentMethod);
+        	Expense::deletePaymentsFromUserPaymentCategory( $this->user->id, $deletedPaymentMethod );
+        	Expense::deletePaymentMethod( $this->user->id, $deletedPaymentMethod );
+	        $pass = "Metoda płatności została usunięta";
+	        $error = ''; 
+	        $active ='9';
+	        $this -> newAction( $pass, $error, $active);
         }
         else
         {
-            Expense::deletePaymentMethod( $this->user->id, $deletedPaymentMethod );
-            $pass = "Metoda płatności została usunięta.";
-            $error = 'Metoda płatności nie zawierała żadnych rekordów.'; 
-            $active ='9';
-            $this -> newAction( $pass, $error, $active);
+        	Expense::deletePaymentMethod( $this->user->id, $deletedPaymentMethod );
+        	$pass = "Metoda płatności została usunięta.";
+	        $error = 'Metoda płatności nie zawierała żadnych rekordów.'; 
+	        $active ='9';
+	        $this -> newAction( $pass, $error, $active);
         }
     }              
 }
